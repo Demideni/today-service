@@ -42,8 +42,11 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
+    // `name` is optional in the request schema but required in the DB.
+    const safeName = (data.name ?? data.email.split("@")[0] ?? "User").slice(0, 80);
+
     const user = await prisma.user.create({
-      data: { email: data.email, passwordHash, name: data.name },
+      data: { email: data.email, passwordHash, name: safeName },
     });
 
     const org = await prisma.organization.create({
