@@ -124,18 +124,19 @@ export async function POST(req: Request) {
 
     await prisma.task.create({
       data: {
+        organizationId: org.id,
         workOrderId: wo.id,
         title: "Replace rotor (front left)",
         description: "Use checklist steps. Request photos before and after.",
-        status: "ASSIGNED",
-        requireBefore: true,
-        requireAfter: true,
+        statusLabel: "assigned",
         steps: {
           create: [
+
             { order: 1, title: "Remove wheel", tools: "Socket 21mm", details: "Jack safely, remove lug nuts." },
             { order: 2, title: "Remove caliper", tools: "Wrench set", details: "Support caliper, don't hang by hose." },
             { order: 3, title: "Replace rotor", tools: "Rubber mallet", details: "Clean hub surface before install." },
             { order: 4, title: "Torque wheel", tools: "Torque wrench", details: "Torque to spec." },
+          
           ],
         },
       },
