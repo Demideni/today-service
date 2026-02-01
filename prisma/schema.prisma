@@ -36,6 +36,10 @@ model User {
   name  String
   role  Role @default(MECHANIC)
 
+  /// BCrypt hash of the user's password.
+  /// Nullable so existing rows can be migrated safely.
+  passwordHash String? @db.Text
+
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
@@ -127,8 +131,10 @@ model Task {
   title       String
   description String?
 
+  // organizationId is optional for now (keeps existing DB data compatible).
+  // If you want to enforce tenant ownership later, make organizationId required and run a migration.
   organizationId String?
-organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   messages TaskMessage[]
 
@@ -176,7 +182,7 @@ model Invite {
   token String @unique
 
   organizationId String
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -208,7 +214,7 @@ model BookingRequest {
   service       String
 
   organizationId String
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   createdAt DateTime @default(now())
 }
