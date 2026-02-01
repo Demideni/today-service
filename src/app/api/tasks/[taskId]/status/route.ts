@@ -7,13 +7,13 @@ const Schema = z.object({
   status: z.enum(["DRAFT","ASSIGNED","IN_PROGRESS","WAITING_PARTS","WAITING_APPROVAL","BLOCKED","DONE","CLOSED"]),
 });
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: { taskId: string } }) {
   try {
     const s = requireRole(["OWNER","MANAGER","MECHANIC"]);
     const { status } = Schema.parse(await req.json());
 
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id: params.taskId },
       include: { workOrder: true, media: true },
     });
     if (!task || task.workOrder.organizationId !== s.orgId)

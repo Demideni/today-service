@@ -7,13 +7,13 @@ const Schema = z.object({
   assignedToId: z.string().nullable(),
 });
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: { taskId: string } }) {
   try {
     const s = requireRole(["OWNER", "MANAGER"]);
     const { assignedToId } = Schema.parse(await req.json());
 
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id: params.taskId },
       include: { workOrder: true },
     });
     if (!task || task.workOrder.organizationId !== s.orgId) {
