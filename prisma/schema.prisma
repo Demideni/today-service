@@ -31,23 +31,35 @@ enum MediaKind {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  passwordHash  String
-  name          String?
-  createdAt     DateTime     @default(now())
-  memberships   Membership[]
-  assignedTasks Task[]       @relation("TaskAssignee")
+  id    String @id @default(cuid())
+  email String @unique
+  name  String
+  role  Role
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  messages TaskMessage[]
+
+  createdAt  DateTime     @default(now())
+  Membership Membership[]
 }
 
 model Organization {
-  slug       String       @unique
-  id         String       @id @default(cuid())
-  name       String
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  users    User[]
+  invites  Invite[]
+  tasks    Task[]
+  bookings BookingRequest[]
+  listings Listing[]
+
   createdAt  DateTime     @default(now())
-  members    Membership[]
-  workOrders WorkOrder[]
-  clients    Client[]
+  Membership Membership[]
+  Client     Client[]
+  WorkOrder  WorkOrder[]
 }
 
 model Membership {
@@ -111,24 +123,20 @@ model WorkOrder {
 }
 
 model Task {
-  id            String     @id @default(cuid())
-  workOrderId   String
-  title         String
-  description   String?
-  assignedToId  String?
-  assignedTo    User?      @relation("TaskAssignee", fields: [assignedToId], references: [id])
-  status        TaskStatus @default(ASSIGNED)
-  requireBefore Boolean    @default(true)
-  requireAfter  Boolean    @default(true)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id          String  @id @default(cuid())
+  title       String
+  description String?
 
-  workOrder WorkOrder @relation(fields: [workOrderId], references: [id])
-  steps     Step[]
-  media     Media[]
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  @@index([workOrderId])
-  @@index([assignedToId])
+  messages TaskMessage[]
+
+  createdAt   DateTime   @default(now())
+  WorkOrder   WorkOrder? @relation(fields: [workOrderId], references: [id])
+  workOrderId String?
+  Step        Step[]
+  Media       Media[]
 }
 
 model Step {
@@ -160,34 +168,30 @@ model Media {
 
   @@index([taskId])
 }
+
 model Invite {
-  id             String   @id @default(cuid())
+  id    String @id @default(cuid())
+  email String
+  role  Role
+  token String @unique
+
   organizationId String
-  email          String
-  role           Role     @default(MECHANIC)
-  token          String   @unique
-  expiresAt      DateTime
-  usedAt         DateTime?
-  createdAt      DateTime @default(now())
-  createdById    String?
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-
-  @@index([organizationId])
-  @@index([email])
+  createdAt DateTime @default(now())
 }
 
 model TaskMessage {
-  id        String   @id @default(cuid())
-  taskId    String
-  authorId  String
-  body      String
+  id   String @id @default(cuid())
+  text String
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
   createdAt DateTime @default(now())
-
-  task   Task @relation(fields: [taskId], references: [id])
-  author User @relation(fields: [authorId], references: [id])
-
-  @@index([taskId, createdAt])
 }
 
 enum BookingStatus {
@@ -198,23 +202,15 @@ enum BookingStatus {
 }
 
 model BookingRequest {
-  id             String        @id @default(cuid())
+  id            String @id @default(cuid())
+  customerName  String
+  customerPhone String
+  service       String
+
   organizationId String
-  status         BookingStatus @default(NEW)
-  clientName     String
-  phone          String?
-  email          String?
-  vehicleMake    String?
-  vehicleModel   String?
-  vehicleYear    Int?
-  serviceType    String
-  preferredDate  String?
-  notes          String?
-  createdAt      DateTime      @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-
-  @@index([organizationId, createdAt])
+  createdAt DateTime @default(now())
 }
 
 enum ListingStatus {
@@ -224,24 +220,16 @@ enum ListingStatus {
 }
 
 model Listing {
-  id             String        @id @default(cuid())
+  id          String @id @default(cuid())
+  title       String
+  description String
+  price       Int
+
   organizationId String?
-  status         ListingStatus @default(ACTIVE)
-  title          String
-  description    String?
-  price          Int?
-  sellerName     String
-  sellerPhone    String?
-  sellerEmail    String?
-  location       String?
-  createdAt      DateTime      @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-
-  photos ListingPhoto[]
-
-  @@index([status, createdAt])
-  @@index([organizationId])
+  createdAt    DateTime       @default(now())
+  ListingPhoto ListingPhoto[]
 }
 
 model ListingPhoto {
@@ -280,12 +268,12 @@ model WorkTemplate {
 }
 
 model WorkTemplateStep {
-  id          String   @id @default(cuid())
-  templateId  String
-  order       Int
-  title       String
-  details     String?
-  tools       String?
+  id         String  @id @default(cuid())
+  templateId String
+  order      Int
+  title      String
+  details    String?
+  tools      String?
 
   template WorkTemplate @relation(fields: [templateId], references: [id])
 
