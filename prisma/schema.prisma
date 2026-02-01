@@ -41,6 +41,7 @@ model User {
 }
 
 model Organization {
+  slug       String       @unique
   id         String       @id @default(cuid())
   name       String
   createdAt  DateTime     @default(now())
@@ -158,4 +159,136 @@ model Media {
   task Task @relation(fields: [taskId], references: [id])
 
   @@index([taskId])
+}
+model Invite {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  role           Role     @default(MECHANIC)
+  token          String   @unique
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime @default(now())
+  createdById    String?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model TaskMessage {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([taskId, createdAt])
+}
+
+enum BookingStatus {
+  NEW
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model BookingRequest {
+  id             String        @id @default(cuid())
+  organizationId String
+  status         BookingStatus @default(NEW)
+  clientName     String
+  phone          String?
+  email          String?
+  vehicleMake    String?
+  vehicleModel   String?
+  vehicleYear    Int?
+  serviceType    String
+  preferredDate  String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  ARCHIVED
+}
+
+model Listing {
+  id             String        @id @default(cuid())
+  organizationId String?
+  status         ListingStatus @default(ACTIVE)
+  title          String
+  description    String?
+  price          Int?
+  sellerName     String
+  sellerPhone    String?
+  sellerEmail    String?
+  location       String?
+  createdAt      DateTime      @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  photos ListingPhoto[]
+
+  @@index([status, createdAt])
+  @@index([organizationId])
+}
+
+model ListingPhoto {
+  id        String   @id @default(cuid())
+  listingId String
+  url       String
+  order     Int
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@unique([listingId, order])
+  @@index([listingId])
+}
+
+enum TemplateCategory {
+  BRAKES
+  OIL_SERVICE
+  SUSPENSION
+  DIAGNOSTICS
+  ENGINE
+  TRANSMISSION
+  TIRES
+  OTHER
+}
+
+model WorkTemplate {
+  id          String           @id @default(cuid())
+  title       String
+  category    TemplateCategory @default(OTHER)
+  description String?
+  vehicleHint String?
+  createdAt   DateTime         @default(now())
+
+  steps WorkTemplateStep[]
+}
+
+model WorkTemplateStep {
+  id          String   @id @default(cuid())
+  templateId  String
+  order       Int
+  title       String
+  details     String?
+  tools       String?
+
+  template WorkTemplate @relation(fields: [templateId], references: [id])
+
+  @@unique([templateId, order])
+  @@index([templateId])
 }

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import TaskControls from "../components/TaskControls";
 import StepChecklist from "../components/StepChecklist";
 import Uploader from "../components/Uploader";
+import TaskChat from "../components/TaskChat";
 
 function badgeFor(status: string) {
   switch (status) {
@@ -85,6 +86,8 @@ export default async function MyTasksPage() {
                   <Uploader taskId={t.id} kind="AFTER" />
                 </div>
               </div>
+
+              <TaskChat taskId={t.id} />
             </section>
           );
         })}
