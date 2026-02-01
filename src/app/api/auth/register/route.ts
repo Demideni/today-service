@@ -128,7 +128,6 @@ export async function POST(req: Request) {
         workOrderId: wo.id,
         title: "Replace rotor (front left)",
         description: "Use checklist steps. Request photos before and after.",
-        statusLabel: "assigned",
         steps: {
           create: [
 
